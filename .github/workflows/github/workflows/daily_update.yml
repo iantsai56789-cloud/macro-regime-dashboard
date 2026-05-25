@@ -1,0 +1,32 @@
+name: Daily Macro Regime Update
+
+on:
+  schedule:
+    - cron: '0 1 * * *' # 國際標準時 01:00，等於台灣時間早上 09:00
+  workflow_dispatch: # 允許你隨時點擊手動更新
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - name: 複製程式碼
+      uses: actions/checkout@v3
+
+    - name: 設定 Python 環境
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+
+    - name: 安裝必要套件
+      run: |
+        pip install requests pandas
+
+    - name: 執行量化核心引擎
+      run: python update_cockpit.py
+
+    - name: 將新生成的網頁同步到雲端
+      run: |
+        git config --local user.email "actions@github.com"
+        git config --local user.name "GitHub Action"
+        git add macro_regime_cockpit.html
+        git diff --quiet && git diff --staged --quiet || (git commit -m "自動同步最新總經體制數據" && git push)
